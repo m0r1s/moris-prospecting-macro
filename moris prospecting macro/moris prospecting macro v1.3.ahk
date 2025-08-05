@@ -38,9 +38,9 @@ F1::
 
     Loop {
         ShowDebugTooltip("starting digging")
-        Sleep 200
+        Sleep 300
         Click("Down")
-        Sleep(200)
+        Sleep 300
 
         while (GetKeyState("LButton", "P")) {
             detectionX := 575
@@ -250,7 +250,7 @@ SaveSettings() {
 CreateMainGui() {
     global mainGui, tooltipCheckbox, cycleText, autoSellCheckbox, autoSellInput, walkTimeInput, nextDigWaitInput
     
-    mainGui := Gui("+AlwaysOnTop -MinimizeBox -Resize", "moris prospecting macro v1.2")
+    mainGui := Gui("+AlwaysOnTop -MinimizeBox -Resize", "moris prospecting macro v1.3")
     mainGui.BackColor := "F0F0F0"
 
     mainGui.SetFont("s10 Norm", "Segoe UI")
