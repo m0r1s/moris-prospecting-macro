@@ -14,6 +14,7 @@ This is a simple macro for the roblox game prospecting.
 - **Settings Persistence**: Automatically saves and loads user settings
 - **Window Move & Resize**: Auto-resizes and positions Roblox window
 - **Terrain Detection**: Auto-detects current terrain for walking (water or land)
+- **Adjustable Timing**: Adjustable Timing for walking and restarting the next dig
 
 ---
 
@@ -49,6 +50,8 @@ Settings are automatically saved to `settings.ini` and include:
 - Debug tooltip preferences
 - Auto-sell enabled/disabled state
 - Auto-sell cycle threshold
+- Adjustable Walk Time = How long (ms) to hold the walk button after new terrain detection
+- Adjustable Dig Wait = How long to wait to start the next dig
 
 ## If Something Goes Wrong
 
@@ -56,4 +59,5 @@ Settings are automatically saved to `settings.ini` and include:
 - Check that AutoHotkey v2.0 installed correctly
 - Make sure windows scaling setting is set to 100%
 - Roblox should be in windowed mode, not fullscreen (the script will try to fix this automatically)
+- Adjust Walk Time or Dig Wait to test if either are causing your problem
 - Try turning on debug tooltips to see what the script is trying to do
