@@ -36,11 +36,11 @@ F1::
     Send "{1}"
     Sleep 300
 
-    ShowDebugTooltip("starting digging")
     Loop {
-        
+        ShowDebugTooltip("starting digging")
+        Sleep 200
         Click("Down")
-        Sleep(100)
+        Sleep(200)
 
         while (GetKeyState("LButton", "P")) {
             detectionX := 575
@@ -115,8 +115,10 @@ F1::
                                 }
                                 Sleep(1)
                             }
-
+                            ShowDebugTooltip("starting digging again")
+                            Sleep 200
                             Click("Down")
+                            Sleep 200
                             Loop {
                                 detectionX := 575
                                 startY := 275
