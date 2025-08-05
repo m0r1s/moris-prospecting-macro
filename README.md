@@ -1,6 +1,8 @@
 # moris Prospecting Macro
 This is a simple macro for the roblox game prospecting.
 
+**Join the discord:** https://discord.gg/moris
+
 ---
 
 ## Features
@@ -55,7 +57,3 @@ Settings are automatically saved to `settings.ini` and include:
 - Make sure windows scaling setting is set to 100%
 - Roblox should be in windowed mode, not fullscreen (the script will try to fix this automatically)
 - Try turning on debug tooltips to see what the script is trying to do
-
-## Discord
-
-- Join the Discord: htps://discord.gg/moris
