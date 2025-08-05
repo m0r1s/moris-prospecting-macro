@@ -69,9 +69,19 @@ F1::
                 
                 if (checkColor != 0x8C8C8C) {
                     ShowDebugTooltip("digging done moving forward")
+
                     Send("{w down}")
-                    Sleep(600)
-                    Send("{w up}")
+                    Loop {
+                        currentColor := PixelGetColor(453, 498)
+                        if (currentColor = 0x353535) {
+                            ShowDebugTooltip("forward position reached")
+                            Sleep(100)
+                            Send("{w up}")
+                            Sleep(300)
+                            break
+                        }
+                        Sleep(1)
+                    }
 
                     ShowDebugTooltip("pan start click")
                     Click()
@@ -89,10 +99,46 @@ F1::
 
                             Sleep 1800
 
+                            ShowDebugTooltip("moving back")
                             Send("{s down}")
-                            Sleep(600)
-                            Send("{s up}")
+                            Loop {
+                                currentColor := PixelGetColor(408, 498)
+                                if (currentColor = 0x353535) {
+                                    ShowDebugTooltip("back position reached")
+                                    Sleep(100)
+                                    Send("{s up}")
+                                    Sleep(300)
+                                    break
+                                }
+                                Sleep(1)
+                            }
+                            
                             Sleep(300)
+
+                            Click("Down")
+                            Loop {
+                                detectionX := 575
+                                startY := 275
+                                endY := 280
+
+                                whitePixelFound := false
+                                Loop (endY - startY + 1) {
+                                    currentY := startY + A_Index - 1
+                                    currentColor := PixelGetColor(detectionX, currentY)
+                                    
+                                    if (currentColor = 0xFFFFFF) {
+                                        whitePixelFound := true
+                                        break
+                                    }
+                                }
+
+                                if (whitePixelFound) {
+                                    ShowDebugTooltip("white pixel detected after moving back")
+                                    Click("Up")
+                                    break
+                                }
+                                Sleep(1)
+                            }
 
                             cycleCount++
                             UpdateCycleDisplay()
@@ -195,7 +241,7 @@ SaveSettings() {
 CreateMainGui() {
     global mainGui, tooltipCheckbox, cycleText, autoSellCheckbox, autoSellInput
     
-    mainGui := Gui("+AlwaysOnTop -MinimizeBox -Resize", "moris prospecting macro v1.0")
+    mainGui := Gui("+AlwaysOnTop -MinimizeBox -Resize", "moris prospecting macro v1.1")
     mainGui.BackColor := "F0F0F0"
 
     mainGui.SetFont("s10 Norm", "Segoe UI")
