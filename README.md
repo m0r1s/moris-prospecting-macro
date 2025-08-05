@@ -17,8 +17,6 @@ This is a simple macro for the roblox game prospecting.
 
 ## Getting Started
 
----
-
 ### What You Need
 
 - Windows PC
