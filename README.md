@@ -11,7 +11,7 @@ This is a simple macro for the roblox game prospecting.
 - **Debug Mode**: Optional debug tooltips for debugging obviously
 - **Settings Persistence**: Automatically saves and loads user settings
 - **Window Move & Resize**: Auto-resizes and positions Roblox window
-- **Terrain Detection**: Auto-detects current terrain (water or land)
+- **Terrain Detection**: Auto-detects current terrain for walking (water or land)
 
 ---
 
