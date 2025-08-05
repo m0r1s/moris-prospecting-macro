@@ -7,11 +7,15 @@ global cycleCount := 0
 global autoSellEnabled := false
 global autoSellCycles := 100
 global showDebugTooltips := false
+global walkTime := 100
+global nextDigWait := 2000
 global mainGui := ""
 global tooltipCheckbox := ""
 global cycleText := ""
 global autoSellCheckbox := ""
 global autoSellInput := ""
+global walkTimeInput := ""
+global nextDigWaitInput := ""
 global settingsFile := "settings.ini"
 
 LoadSettings()
@@ -34,7 +38,6 @@ F1::
 
     ShowDebugTooltip("starting digging")
     Loop {
-        ShowDebugTooltip("iteration starting")
         
         Click("Down")
         Sleep(100)
@@ -63,7 +66,7 @@ F1::
                 ShowDebugTooltip("releasing click")
                 Click("Up")
                 
-                Sleep(2000)
+                Sleep(nextDigWait)
 
                 checkColor := PixelGetColor(598, 432)
                 
@@ -74,9 +77,9 @@ F1::
                     Loop {
                         currentColor := PixelGetColor(453, 498)
                         if (currentColor = 0x353535) {
-                            ShowDebugTooltip("forward position reached")
-                            Sleep(100)
+                            Sleep(walkTime)
                             Send("{w up}")
+                            ShowDebugTooltip("forward position reached")
                             Sleep(300)
                             break
                         }
@@ -104,16 +107,14 @@ F1::
                             Loop {
                                 currentColor := PixelGetColor(408, 498)
                                 if (currentColor = 0x353535) {
-                                    ShowDebugTooltip("back position reached")
-                                    Sleep(100)
+                                    Sleep(walkTime)
                                     Send("{s up}")
+                                    ShowDebugTooltip("back position reached")
                                     Sleep(300)
                                     break
                                 }
                                 Sleep(1)
                             }
-                            
-                            Sleep(300)
 
                             Click("Down")
                             Loop {
@@ -133,7 +134,7 @@ F1::
                                 }
 
                                 if (whitePixelFound) {
-                                    ShowDebugTooltip("white pixel detected after moving back")
+                                    ShowDebugTooltip("releasing click to dig")
                                     Click("Up")
                                     break
                                 }
@@ -151,7 +152,7 @@ F1::
                                 cycleCount := 0
                                 UpdateCycleDisplay()
                                 SaveSettings()
-                                ShowDebugTooltip("autosell completed, cycle count reset")
+                                ShowDebugTooltip("autosell completed")
                             }
                             
                             break
@@ -169,7 +170,10 @@ F1::
 }
 
 F2:: {
+    global cycleCount
+    cycleCount := 0
     ShowDebugTooltip("reloading")
+    UpdateCycleDisplay()
     SaveSettings
     Sleep(100)
     Reload
@@ -208,40 +212,43 @@ AutoSell() {
 }
 
 LoadSettings() {
-    global settingsFile, showDebugTooltips, autoSellEnabled, autoSellCycles, cycleCount
+    global settingsFile, showDebugTooltips, autoSellEnabled, autoSellCycles, walkTime, nextDigWait
     
     try {
         showDebugTooltips := IniRead(settingsFile, "General", "ShowTooltips", false)
         autoSellEnabled := IniRead(settingsFile, "AutoSell", "Enabled", false)
         autoSellCycles := IniRead(settingsFile, "AutoSell", "Cycles", 100)
-        cycleCount := IniRead(settingsFile, "General", "CycleCount", 0)
+        walkTime := IniRead(settingsFile, "Variables", "WalkTime", 100)
+        nextDigWait := IniRead(settingsFile, "Variables", "NextDigWait", 2000)
 
         showDebugTooltips := (showDebugTooltips = "true" || showDebugTooltips = "1")
         autoSellEnabled := (autoSellEnabled = "true" || autoSellEnabled = "1")
         autoSellCycles := Integer(autoSellCycles)
-        cycleCount := Integer(cycleCount)
+        walkTime := Integer(walkTime)
+        nextDigWait := Integer(nextDigWait)
 
     } catch as e {
     }
 }
 
 SaveSettings() {
-    global settingsFile, showDebugTooltips, autoSellEnabled, autoSellCycles, cycleCount
+    global settingsFile, showDebugTooltips, autoSellEnabled, autoSellCycles, walkTime, nextDigWait
     
     try {
         IniWrite(showDebugTooltips ? "true" : "false", settingsFile, "General", "ShowTooltips")
         IniWrite(autoSellEnabled ? "true" : "false", settingsFile, "AutoSell", "Enabled")
         IniWrite(autoSellCycles, settingsFile, "AutoSell", "Cycles")
-        IniWrite(cycleCount, settingsFile, "General", "CycleCount")
+        IniWrite(walkTime, settingsFile, "Variables", "WalkTime")
+        IniWrite(nextDigWait, settingsFile, "Variables", "NextDigWait")
 
     } catch as e {
     }
 }
 
 CreateMainGui() {
-    global mainGui, tooltipCheckbox, cycleText, autoSellCheckbox, autoSellInput
+    global mainGui, tooltipCheckbox, cycleText, autoSellCheckbox, autoSellInput, walkTimeInput, nextDigWaitInput
     
-    mainGui := Gui("+AlwaysOnTop -MinimizeBox -Resize", "moris prospecting macro v1.1")
+    mainGui := Gui("+AlwaysOnTop -MinimizeBox -Resize", "moris prospecting macro v1.2")
     mainGui.BackColor := "F0F0F0"
 
     mainGui.SetFont("s10 Norm", "Segoe UI")
@@ -265,10 +272,19 @@ CreateMainGui() {
     cycleText := mainGui.Add("Text", "xs+59 ys+58 w50 h23 +Border +Center +0x200 BackgroundWhite c003366", cycleCount)
     cycleText.SetFont("s11 Bold", "Consolas")
 
+    mainGui.Add("GroupBox", "x273 y0 w124 h90 Section", "Variables")
+    mainGui.Add("Text", "xs+10 ys+25 w70 h23 +0x200", "Walk Time:")
+    walkTimeInput := mainGui.Add("Edit", "xs+75 ys+25 w40 h25 Number Limit4 Center", walkTime)
+    walkTimeInput.OnEvent("Change", UpdateWalkTime)
+    
+    mainGui.Add("Text", "xs+10 ys+55 w70 h23 +0x200", "Dig Wait:")
+    nextDigWaitInput := mainGui.Add("Edit", "xs+75 ys+55 w40 h25 Number Limit4 Center", nextDigWait)
+    nextDigWaitInput.OnEvent("Change", UpdateNextDigWait)
+
     mainGui.OnEvent("Close", GuiClose)
     mainGui.OnEvent("Escape", GuiClose)
 
-    mainGui.Show("x-7 y630 w272 h97")
+    mainGui.Show("x-7 y630 w405 h97")
     mainGui.Opt("+Border")
 }
 
@@ -299,6 +315,32 @@ UpdateAutoSellCycles(*) {
         }
     } catch {
         autoSellInput.Text := autoSellCycles
+    }
+}
+
+UpdateWalkTime(*) {
+    global walkTime, walkTimeInput
+    try {
+        newValue := Integer(walkTimeInput.Text)
+        if (newValue >= 0) {
+            walkTime := newValue
+            SaveSettings()
+        }
+    } catch {
+        walkTimeInput.Text := walkTime
+    }
+}
+
+UpdateNextDigWait(*) {
+    global nextDigWait, nextDigWaitInput
+    try {
+        newValue := Integer(nextDigWaitInput.Text)
+        if (newValue >= 0) {
+            nextDigWait := newValue
+            SaveSettings()
+        }
+    } catch {
+        nextDigWaitInput.Text := nextDigWait
     }
 }
 
