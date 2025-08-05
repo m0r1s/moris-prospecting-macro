@@ -38,6 +38,8 @@ This is a simple macro for the roblox game prospecting.
 3. Hit `F1` to start
 4. The script will resize your Roblox window and start doing its thing
 
+---
+
 ## Configuration
 
 Settings are automatically saved to `settings.ini` and include:
