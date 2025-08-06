@@ -86,19 +86,16 @@ F1::
                     }
 
                     ShowDebugTooltip("pan start click")
-                    Click()
 
                     Sleep(300)
 
-                    ShowDebugTooltip("holding click to pan")
-                    Click("Down")
+                    ShowDebugTooltip("panning")
                     Loop {
                         detectedColor := PixelGetColor(359, 432)
                         
                         if (detectedColor = 0x8C8C8C) {
                             ShowDebugTooltip("panning done moving back")
-                            Click("Up")
-
+                            
                             Sleep 1800
 
                             ShowDebugTooltip("moving back")
@@ -159,7 +156,9 @@ F1::
                             
                             break
                         }
-                        Sleep(1)
+
+                        Click("Left")
+                        Sleep(10)
                     }
                 }
 
@@ -250,7 +249,7 @@ SaveSettings() {
 CreateMainGui() {
     global mainGui, tooltipCheckbox, cycleText, autoSellCheckbox, autoSellInput, walkTimeInput, nextDigWaitInput
     
-    mainGui := Gui("+AlwaysOnTop -MinimizeBox -Resize", "moris prospecting macro v1.4")
+    mainGui := Gui("+AlwaysOnTop -MinimizeBox -Resize", "moris prospecting macro v1.5")
     mainGui.BackColor := "F0F0F0"
 
     mainGui.SetFont("s10 Norm", "Segoe UI")
