@@ -1,4 +1,4 @@
-﻿#Requires AutoHotkey v2.0
+#Requires AutoHotkey v2.0
 #SingleInstance Force
 
 global FIXED_TOOLTIP_X := 357
@@ -17,13 +17,21 @@ global autoSellInput := ""
 global walkTimeInput := ""
 global nextDigWaitInput := ""
 global settingsFile := "settings.ini"
+global oneTimeDigFull := false
+global oneTimeDigFullCheckbox := ""
+global detectionX := 575
+global startY := 275
+global endY := 280
+global detectionXInput := ""
+global startYInput := ""
+global endYInput := ""
 
 LoadSettings()
 CreateMainGui()
 
 F1::
 {
-    global cycleCount
+    global cycleCount, oneTimeDigFull, detectionX, startY, endY
     ShowDebugTooltip("starting macro")
     
     ResizeRobloxWindow()
@@ -42,10 +50,6 @@ F1::
         Click("Down")
 
         while (GetKeyState("LButton", "P")) {
-            detectionX := 575
-            startY := 275
-            endY := 280
-
             ShowDebugTooltip("holding click")
 
             whitePixelFound := false
@@ -111,33 +115,32 @@ F1::
                                 }
                                 Sleep(1)
                             }
-                            ShowDebugTooltip("starting digging again")
-                            Sleep 300
-                            Click("Down")
+                            
+                            if (!oneTimeDigFull) {
+                                ShowDebugTooltip("starting digging again")
+                                Sleep 300
+                                Click("Down")
 
-                            Loop {
-                                detectionX := 575
-                                startY := 275
-                                endY := 280
+                                Loop {
+                                    whitePixelFound := false
+                                    Loop (endY - startY + 1) {
+                                        currentY := startY + A_Index - 1
+                                        currentColor := PixelGetColor(detectionX, currentY)
+                                        
+                                        if (currentColor = 0xFFFFFF) {
+                                            whitePixelFound := true
+                                            break
+                                        }
+                                    }
 
-                                whitePixelFound := false
-                                Loop (endY - startY + 1) {
-                                    currentY := startY + A_Index - 1
-                                    currentColor := PixelGetColor(detectionX, currentY)
-                                    
-                                    if (currentColor = 0xFFFFFF) {
-                                        whitePixelFound := true
+                                    if (whitePixelFound) {
+                                        ShowDebugTooltip("releasing click to dig")
+                                        Click("Up")
+                                        Sleep(nextDigWait)
                                         break
                                     }
+                                    Sleep(1)
                                 }
-
-                                if (whitePixelFound) {
-                                    ShowDebugTooltip("releasing click to dig")
-                                    Click("Up")
-                                    Sleep(nextDigWait)
-                                    break
-                                }
-                                Sleep(1)
                             }
 
                             cycleCount++
@@ -213,43 +216,55 @@ AutoSell() {
 }
 
 LoadSettings() {
-    global settingsFile, showDebugTooltips, autoSellEnabled, autoSellCycles, walkTime, nextDigWait
+    global settingsFile, showDebugTooltips, autoSellEnabled, autoSellCycles, walkTime, nextDigWait, oneTimeDigFull, detectionX, startY, endY
     
     try {
         showDebugTooltips := IniRead(settingsFile, "General", "ShowTooltips", false)
+        oneTimeDigFull := IniRead(settingsFile, "General", "OneTimeDigFull", false)
         autoSellEnabled := IniRead(settingsFile, "AutoSell", "Enabled", false)
         autoSellCycles := IniRead(settingsFile, "AutoSell", "Cycles", 100)
         walkTime := IniRead(settingsFile, "Variables", "WalkTime", 100)
         nextDigWait := IniRead(settingsFile, "Variables", "NextDigWait", 2000)
+        detectionX := IniRead(settingsFile, "Variables", "DetectionX", 575)
+        startY := IniRead(settingsFile, "Variables", "StartY", 275)
+        endY := IniRead(settingsFile, "Variables", "EndY", 280)
 
         showDebugTooltips := (showDebugTooltips = "true" || showDebugTooltips = "1")
+        oneTimeDigFull := (oneTimeDigFull = "false" || oneTimeDigFull = "0")
         autoSellEnabled := (autoSellEnabled = "true" || autoSellEnabled = "1")
         autoSellCycles := Integer(autoSellCycles)
         walkTime := Integer(walkTime)
         nextDigWait := Integer(nextDigWait)
+        detectionX := Integer(detectionX)
+        startY := Integer(startY)
+        endY := Integer(endY)
 
     } catch as e {
     }
 }
 
 SaveSettings() {
-    global settingsFile, showDebugTooltips, autoSellEnabled, autoSellCycles, walkTime, nextDigWait
+    global settingsFile, showDebugTooltips, autoSellEnabled, autoSellCycles, walkTime, nextDigWait, oneTimeDigFull, detectionX, startY, endY
     
     try {
         IniWrite(showDebugTooltips ? "true" : "false", settingsFile, "General", "ShowTooltips")
+        IniWrite(oneTimeDigFull ? "true" : "false", settingsFile, "General", "OneTimeDigFull")
         IniWrite(autoSellEnabled ? "true" : "false", settingsFile, "AutoSell", "Enabled")
         IniWrite(autoSellCycles, settingsFile, "AutoSell", "Cycles")
         IniWrite(walkTime, settingsFile, "Variables", "WalkTime")
         IniWrite(nextDigWait, settingsFile, "Variables", "NextDigWait")
+        IniWrite(detectionX, settingsFile, "Variables", "DetectionX")
+        IniWrite(startY, settingsFile, "Variables", "StartY")
+        IniWrite(endY, settingsFile, "Variables", "EndY")
 
     } catch as e {
     }
 }
 
 CreateMainGui() {
-    global mainGui, tooltipCheckbox, cycleText, autoSellCheckbox, autoSellInput, walkTimeInput, nextDigWaitInput
+    global mainGui, tooltipCheckbox, cycleText, autoSellCheckbox, autoSellInput, walkTimeInput, nextDigWaitInput, oneTimeDigFullCheckbox, detectionXInput, startYInput, endYInput, detectionX, startY, endY
     
-    mainGui := Gui("+AlwaysOnTop -MinimizeBox -Resize", "moris prospecting macro v1.5")
+    mainGui := Gui("+AlwaysOnTop -MinimizeBox +Resize", "Moris prospecting macro v1.5 (modified by Hecta)")
     mainGui.BackColor := "F0F0F0"
 
     mainGui.SetFont("s10 Norm", "Segoe UI")
@@ -265,15 +280,20 @@ CreateMainGui() {
     autoSellInput := mainGui.Add("Edit", "xs+75 ys+55 w40 h25 Number Limit3 Center", autoSellCycles)
     autoSellInput.OnEvent("Change", UpdateAutoSellCycles)
 
-    mainGui.Add("GroupBox", "x140 y0 w124 h90 Section", "Other")
+    mainGui.Add("GroupBox", "x140 y0 w154 h130 Section", "Other") ; Increased width
+
     tooltipCheckbox := mainGui.Add("Checkbox", "xs+10 ys+25 h25 Checked" . (showDebugTooltips ? "1" : "0"), "Debug Tooltips")
     tooltipCheckbox.OnEvent("Click", ToggleTooltips)
+    
+    oneTimeDigFullCheckbox := mainGui.Add("Checkbox", "xs+10 y+5 h25 Checked" . (oneTimeDigFull ? "1" : "0"), "One Time Dig")
+    oneTimeDigFullCheckbox.OnEvent("Click", ToggleOneTimeDigFull)
 
-    mainGui.Add("Text", "xs+10 ys+55 w80 h23 +0x200", "Cycles:")
-    cycleText := mainGui.Add("Text", "xs+59 ys+58 w50 h23 +Border +Center +0x200 BackgroundWhite c003366", cycleCount)
+    mainGui.Add("Text", "xs+10 ys+85 w80 h23 +0x200", "Cycles:")
+    cycleText := mainGui.Add("Text", "xs+59 ys+88 w50 h23 +Border +Center +0x200 BackgroundWhite c003366", cycleCount)
     cycleText.SetFont("s11 Bold", "Consolas")
 
-    mainGui.Add("GroupBox", "x273 y0 w124 h90 Section", "Variables")
+    mainGui.Add("GroupBox", "x299 y0 w260 h130 Section", "Variables") ; Increased width and moved
+
     mainGui.Add("Text", "xs+10 ys+25 w70 h23 +0x200", "Walk Time:")
     walkTimeInput := mainGui.Add("Edit", "xs+75 ys+25 w40 h25 Number Limit4 Center", walkTime)
     walkTimeInput.OnEvent("Change", UpdateWalkTime)
@@ -281,11 +301,24 @@ CreateMainGui() {
     mainGui.Add("Text", "xs+10 ys+55 w70 h23 +0x200", "Dig Wait:")
     nextDigWaitInput := mainGui.Add("Edit", "xs+75 ys+55 w40 h25 Number Limit4 Center", nextDigWait)
     nextDigWaitInput.OnEvent("Change", UpdateNextDigWait)
+    
+    mainGui.Add("Text", "xs+130 ys+25 w75 h23 +0x200", "Detection X:")
+    detectionX := mainGui.Add("Text", "xs+210 ys+25 w40 h25 +Border +Center +0x200 BackgroundWhite c003366", detectionX)
+    detectionX.SetFont("s11 Bold", "Consolas")
+    
+    mainGui.Add("Text", "xs+130 ys+55 w75 h23 +0x200", "Start Dig Y:")
+    startYInput := mainGui.Add("Edit", "xs+210 ys+55 w40 h25 Number Limit4 Center", startY)
+    startYInput.OnEvent("Change", UpdateStartY)
+    
+    mainGui.Add("Text", "xs+130 ys+85 w75 h23 +0x200", "End Dig Y:")
+    endYInput := mainGui.Add("Edit", "xs+210 ys+85 w40 h25 Number Limit4 Center", endY)
+    endYInput.OnEvent("Change", UpdateEndY)
 
     mainGui.OnEvent("Close", GuiClose)
     mainGui.OnEvent("Escape", GuiClose)
 
-    mainGui.Show("x-7 y630 w405 h97")
+    ;mainGui.Show("x-7 y630 w530 h120") ; Increased width and height
+    mainGui.Show("x-7 y630 w570 h140")
     mainGui.Opt("+Border")
 }
 
@@ -303,6 +336,12 @@ ToggleTooltips(*) {
 ToggleAutoSell(*) {
     global autoSellEnabled, autoSellCheckbox
     autoSellEnabled := autoSellCheckbox.Value
+    SaveSettings()
+}
+
+ToggleOneTimeDigFull(*) {
+    global oneTimeDigFull, oneTimeDigFullCheckbox
+    oneTimeDigFull := oneTimeDigFullCheckbox.Value
     SaveSettings()
 }
 
@@ -342,6 +381,45 @@ UpdateNextDigWait(*) {
         }
     } catch {
         nextDigWaitInput.Text := nextDigWait
+    }
+}
+
+UpdateDetectionX(*) {
+    global detectionX, detectionXInput
+    try {
+        newValue := Integer(detectionXInput.Text)
+        if (newValue >= 0) {
+            detectionX := newValue
+            SaveSettings()
+        }
+    } catch {
+        detectionXInput.Text := detectionX
+    }
+}
+
+UpdateStartY(*) {
+    global startY, startYInput
+    try {
+        newValue := Integer(startYInput.Text)
+        if (newValue >= 0) {
+            startY := newValue
+            SaveSettings()
+        }
+    } catch {
+        startYInput.Text := startY
+    }
+}
+
+UpdateEndY(*) {
+    global endY, endYInput
+    try {
+        newValue := Integer(endYInput.Text)
+        if (newValue >= 0) {
+            endY := newValue
+            SaveSettings()
+        }
+    } catch {
+        endYInput.Text := endY
     }
 }
 
