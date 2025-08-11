@@ -216,7 +216,7 @@ AutoSell() {
 }
 
 LoadSettings() {
-    global settingsFile, showDebugTooltips, autoSellEnabled, autoSellCycles, walkTime, nextDigWait, oneTimeDigFull, detectionX, startY, endY
+    global settingsFile, showDebugTooltips, autoSellEnabled, autoSellCycles, walkTime, nextDigWait, oneTimeDigFull, startY, endY
     
     try {
         showDebugTooltips := IniRead(settingsFile, "General", "ShowTooltips", false)
@@ -225,7 +225,6 @@ LoadSettings() {
         autoSellCycles := IniRead(settingsFile, "AutoSell", "Cycles", 100)
         walkTime := IniRead(settingsFile, "Variables", "WalkTime", 100)
         nextDigWait := IniRead(settingsFile, "Variables", "NextDigWait", 2000)
-        detectionX := IniRead(settingsFile, "Variables", "DetectionX", 575)
         startY := IniRead(settingsFile, "Variables", "StartY", 275)
         endY := IniRead(settingsFile, "Variables", "EndY", 280)
 
@@ -235,7 +234,6 @@ LoadSettings() {
         autoSellCycles := Integer(autoSellCycles)
         walkTime := Integer(walkTime)
         nextDigWait := Integer(nextDigWait)
-        detectionX := Integer(detectionX)
         startY := Integer(startY)
         endY := Integer(endY)
 
@@ -244,7 +242,7 @@ LoadSettings() {
 }
 
 SaveSettings() {
-    global settingsFile, showDebugTooltips, autoSellEnabled, autoSellCycles, walkTime, nextDigWait, oneTimeDigFull, detectionX, startY, endY
+    global settingsFile, showDebugTooltips, autoSellEnabled, autoSellCycles, walkTime, nextDigWait, oneTimeDigFull, startY, endY
     
     try {
         IniWrite(showDebugTooltips ? "true" : "false", settingsFile, "General", "ShowTooltips")
@@ -253,7 +251,6 @@ SaveSettings() {
         IniWrite(autoSellCycles, settingsFile, "AutoSell", "Cycles")
         IniWrite(walkTime, settingsFile, "Variables", "WalkTime")
         IniWrite(nextDigWait, settingsFile, "Variables", "NextDigWait")
-        IniWrite(detectionX, settingsFile, "Variables", "DetectionX")
         IniWrite(startY, settingsFile, "Variables", "StartY")
         IniWrite(endY, settingsFile, "Variables", "EndY")
 
@@ -262,9 +259,9 @@ SaveSettings() {
 }
 
 CreateMainGui() {
-    global mainGui, tooltipCheckbox, cycleText, autoSellCheckbox, autoSellInput, walkTimeInput, nextDigWaitInput, oneTimeDigFullCheckbox, detectionXInput, startYInput, endYInput, detectionX, startY, endY
+    global mainGui, tooltipCheckbox, cycleText, autoSellCheckbox, autoSellInput, walkTimeInput, nextDigWaitInput, oneTimeDigFullCheckbox, startYInput, endYInput, startY, endY
     
-    mainGui := Gui("+AlwaysOnTop -MinimizeBox +Resize", "Moris prospecting macro v1.5 (modified by Hecta)")
+    mainGui := Gui("+AlwaysOnTop -MinimizeBox -Resize", "Moris prospecting macro v1.5 (modified by Hecta)")
     mainGui.BackColor := "F0F0F0"
 
     mainGui.SetFont("s10 Norm", "Segoe UI")
@@ -272,7 +269,7 @@ CreateMainGui() {
     mainGui.MarginX := 0
     mainGui.MarginY := 0
 
-    mainGui.Add("GroupBox", "x7 y0 w124 h90 Section", "Autosell")
+    mainGui.Add("GroupBox", "x7 y0 w124 h95 Section", "Autosell")
     autoSellCheckbox := mainGui.Add("Checkbox", "xs+10 ys+25 h25 Checked" . (autoSellEnabled ? "1" : "0"), "Enable Autosell")
     autoSellCheckbox.OnEvent("Click", ToggleAutoSell)
     
@@ -280,7 +277,7 @@ CreateMainGui() {
     autoSellInput := mainGui.Add("Edit", "xs+75 ys+55 w40 h25 Number Limit3 Center", autoSellCycles)
     autoSellInput.OnEvent("Change", UpdateAutoSellCycles)
 
-    mainGui.Add("GroupBox", "x140 y0 w154 h130 Section", "Other") ; Increased width
+    mainGui.Add("GroupBox", "x140 y0 w150 h125 Section", "Other") ; Increased width
 
     tooltipCheckbox := mainGui.Add("Checkbox", "xs+10 ys+25 h25 Checked" . (showDebugTooltips ? "1" : "0"), "Debug Tooltips")
     tooltipCheckbox.OnEvent("Click", ToggleTooltips)
@@ -292,7 +289,7 @@ CreateMainGui() {
     cycleText := mainGui.Add("Text", "xs+59 ys+88 w50 h23 +Border +Center +0x200 BackgroundWhite c003366", cycleCount)
     cycleText.SetFont("s11 Bold", "Consolas")
 
-    mainGui.Add("GroupBox", "x299 y0 w260 h130 Section", "Variables") ; Increased width and moved
+    mainGui.Add("GroupBox", "x295 y0 w260 h95 Section", "Variables") ; Increased width and moved
 
     mainGui.Add("Text", "xs+10 ys+25 w70 h23 +0x200", "Walk Time:")
     walkTimeInput := mainGui.Add("Edit", "xs+75 ys+25 w40 h25 Number Limit4 Center", walkTime)
@@ -302,16 +299,12 @@ CreateMainGui() {
     nextDigWaitInput := mainGui.Add("Edit", "xs+75 ys+55 w40 h25 Number Limit4 Center", nextDigWait)
     nextDigWaitInput.OnEvent("Change", UpdateNextDigWait)
     
-    mainGui.Add("Text", "xs+130 ys+25 w75 h23 +0x200", "Detection X:")
-    detectionX := mainGui.Add("Text", "xs+210 ys+25 w40 h25 +Border +Center +0x200 BackgroundWhite c003366", detectionX)
-    detectionX.SetFont("s11 Bold", "Consolas")
-    
-    mainGui.Add("Text", "xs+130 ys+55 w75 h23 +0x200", "Start Dig Y:")
-    startYInput := mainGui.Add("Edit", "xs+210 ys+55 w40 h25 Number Limit4 Center", startY)
+    mainGui.Add("Text", "xs+130 ys+25 w75 h23 +0x200", "Start Dig Y:")
+    startYInput := mainGui.Add("Edit", "xs+210 ys+25 w40 h25 Number Limit4 Center", startY)
     startYInput.OnEvent("Change", UpdateStartY)
     
-    mainGui.Add("Text", "xs+130 ys+85 w75 h23 +0x200", "End Dig Y:")
-    endYInput := mainGui.Add("Edit", "xs+210 ys+85 w40 h25 Number Limit4 Center", endY)
+    mainGui.Add("Text", "xs+130 ys+55 w75 h23 +0x200", "End Dig Y:")
+    endYInput := mainGui.Add("Edit", "xs+210 ys+55 w40 h25 Number Limit4 Center", endY)
     endYInput.OnEvent("Change", UpdateEndY)
 
     mainGui.OnEvent("Close", GuiClose)
